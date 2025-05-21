@@ -48,7 +48,8 @@ class StyleMotionDataset(Dataset):
             self.tokens=['sks', 'hta', 'oue', 'asar', 'nips']
             assert len(self.styles) <= len(self.tokens)
         
-        path = "./dataset/100STYLE-SMPL/"
+        # path = "./dataset/100STYLE-SMPL/"
+        path = "/data/mint/Motion_Dataset/RETARGETED_100STYLE/100STYLE-SMPL/"
         split_file = path + "train_100STYLE_Full.txt" 
                 
         self.movments = {

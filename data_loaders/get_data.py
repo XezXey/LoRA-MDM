@@ -38,6 +38,7 @@ def get_collate_fn(name, hml_mode='train'):
 
 def get_dataset(name, num_frames, split='train', hml_mode='train', styles=None, motion_type_to_exclude=[]):
     DATA = get_dataset_class(name)
+    print(f"[#] Dataclass: {DATA}")
     if name in ["humanml", "kit"]:
         dataset = DATA(split=split, num_frames=num_frames, mode=hml_mode)
     elif name == "100style":
