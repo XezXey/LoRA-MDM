@@ -20,11 +20,11 @@ def build_dict_from_txt(filename):
         for line in f:
             parts = line.strip().split(" ")
             if len(parts) >= 3:
-                key = parts[0]
-                value = parts[2].split("_")[0]
-                value2 = parts[1].split("_")[0]
-                value3 = parts[1].split("_")[1]
-                value4 = parts[1].split("_")[2].split('.')[0]
+                key = parts[0]  # Filename
+                value = parts[2].split("_")[0] #  Last number in name_dict (#NOTE: Not sure what this is???) ===> Probably the action id
+                value2 = parts[1].split("_")[0] # Motion style
+                value3 = parts[1].split("_")[1] # Motion type
+                value4 = parts[1].split("_")[2].split('.')[0]   # Cut index
 
                 result_dict[key] = value, value2, value3, value4
                 
@@ -53,7 +53,7 @@ class StyleMotionDataset(Dataset):
         split_file = path + "train_100STYLE_Full.txt" 
                 
         self.movments = {
-           "BR":	"running backwards",
+            "BR":	"running backwards",
             "BW":	"walking backwards",
             "FR":	"running",
             "FW":	"walking",
@@ -178,6 +178,10 @@ class StyleMotionDataset(Dataset):
         elif coin2 == "single":
             m_length = (m_length // self.unit_length) * self.unit_length
 
+        #NOTE: Main step of the code for training the new motion style
+        # 1. Change the prompt following the motion type
+        # 2. Using the caption as "A person is <movement> in <style_token> style."; 
+        # where <movement can be seen from the dictionary (self.movments) and <style_token> is the token for the style
         movement = self.movments[motion_type]
         caption = f'A person is {movement} in {style_token} style.'
 

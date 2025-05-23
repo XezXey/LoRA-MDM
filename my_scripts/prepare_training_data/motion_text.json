@@ -1,0 +1,38 @@
+{
+    "demo_cr7_1.npy": {
+        "texts": 
+        [
+            "a person runs and circles his foot over the ball.",
+            "a man runs straight and circles his right foot around the ball.",
+            "a person steps over the ball with his right foot while running."
+        ],
+        "motion_style": "Stepover",
+        "motion_type": "FR",
+        "action_id": 0,
+        "cut_idx": "00"
+    },
+    "demo_cr7_2.npy": {
+        "texts": 
+        [
+            "a person jumps with arms slightly spread and lands with both feet apart.",
+            "a man spins slightly in mid-air and lands facing forward.",
+            "a person jumps and spins counterclockwise in mid-air."
+        ],
+        "motion_style": "Siuuu",
+        "motion_type": "FR",
+        "action_id": 0,
+        "cut_idx": "00"
+    },
+    "demo_weightlifting.npy":{
+        "texts":
+        [
+            "a person squats down, grips a barbell, and pulls it upward.",
+            "a person squats down, lifts the bar in one motion, and stands upright.",
+            "a man jerks the weight overhead with arms straight."
+        ],
+        "motion_type": "ID",
+        "motion_style": "Cleanjerk",
+        "action_id": 0,
+        "cut_idx": "00"
+    }
+}

@@ -747,7 +747,8 @@ class HumanML3D(data.Dataset):
         opt.checkpoints_dir = pjoin(abs_base_path, opt.checkpoints_dir)
         opt.data_root = pjoin(abs_base_path, opt.data_root)
         opt.save_root = pjoin(abs_base_path, opt.save_root)
-        opt.meta_dir = './dataset'
+        # opt.meta_dir = './dataset'
+        opt.meta_dir = '/data/mint/Motion_Dataset/HumanML3D/'
         opt.use_cache = kwargs.get('use_cache', True)
         self.opt = opt
         print('Loading dataset %s ...' % opt.dataset_name)

@@ -1,0 +1,3 @@
+demo_cr7_1 Stepover_FR_00.npy 0
+demo_cr7_2 Siuuu_FR_00.npy 0
+demo_weightlifting Cleanjerk_ID_00.npy 0
