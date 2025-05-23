@@ -30,7 +30,7 @@ def main(args=None):
     out_path = args.output_dir
     name = os.path.basename(os.path.dirname(args.model_path))
     niter = os.path.basename(args.model_path).replace('model', '').replace('.pt', '')
-    max_frames = 196 if args.dataset in ['kit', 'humanml', '100style'] else 60
+    max_frames = 196 if args.dataset in ['kit', 'humanml', '100style', 'mintstyle'] else 60
     fps = 12.5 if args.dataset == 'kit' else 20
     n_frames = min(max_frames, int(args.motion_length*fps)) if args.motion_length is not None else max_frames
     is_using_data = not any([args.input_text, args.text_prompt, args.action_file, args.action_name])

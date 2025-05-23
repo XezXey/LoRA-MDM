@@ -51,6 +51,6 @@ if __name__ == "__main__":
         with open(args.dataset_dir + '/train/' + f'train_{filename}' + '.txt', 'w') as f:
             f.write(f'{filename}\n')
         
-    with open(args.dataset_dir + '/mint_name_dict.txt', 'w') as f:
+    with open(args.dataset_dir + '/MintStyle_name_dict.txt', 'w') as f:
         for line in motion_name_dict:
             f.write(line + '\n')

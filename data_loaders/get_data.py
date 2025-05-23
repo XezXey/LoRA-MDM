@@ -23,6 +23,9 @@ def get_dataset_class(name):
     elif name == "100style":
         from data_loaders.style.dataset import StyleMotionDataset
         return StyleMotionDataset
+    elif name == "mintstyle":
+        from data_loaders.mintstyle.dataset import StyleMotionDataset
+        return StyleMotionDataset
     else:
         raise ValueError(f'Unsupported dataset name [{name}]')
 
@@ -36,19 +39,22 @@ def get_collate_fn(name, hml_mode='train'):
         return all_collate
 
 
-def get_dataset(name, num_frames, split='train', hml_mode='train', styles=None, motion_type_to_exclude=[]):
+def get_dataset(name, num_frames, split='train', hml_mode='train', styles=None, motion_type_to_exclude=[], split_file=None):
     DATA = get_dataset_class(name)
     print(f"[#] Dataclass: {DATA}")
     if name in ["humanml", "kit"]:
         dataset = DATA(split=split, num_frames=num_frames, mode=hml_mode)
     elif name == "100style":
-        dataset = DATA(styles, split,motion_type_to_exclude=motion_type_to_exclude)
+        dataset = DATA(styles, split, motion_type_to_exclude=motion_type_to_exclude)
+    elif name == "mintstyle":
+        dataset = DATA(styles, split, motion_type_to_exclude=motion_type_to_exclude, split_file=split_file)
+        
     else:
         dataset = DATA(split=split, num_frames=num_frames)
     return dataset
 
-def get_dataset_loader(name, batch_size, num_frames, split='train', hml_mode='train', styles=None, debug=False, motion_type_to_exclude=()):
-    dataset = get_dataset(name, num_frames, split, hml_mode, styles, motion_type_to_exclude)
+def get_dataset_loader(name, batch_size, num_frames, split='train', hml_mode='train', styles=None, debug=False, motion_type_to_exclude=(), split_file=None):
+    dataset = get_dataset(name, num_frames, split, hml_mode, styles, motion_type_to_exclude, split_file=split_file)
     collate = get_collate_fn(name, hml_mode)
     batch_size = 5 if debug else min(len(dataset), batch_size)
     drop_last = name == "humanml"

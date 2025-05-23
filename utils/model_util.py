@@ -39,7 +39,7 @@ def get_model_args(args, data):
     njoints = 25
     nfeats = 6
 
-    if args.dataset in ['humanml', '100style']:
+    if args.dataset in ['humanml', '100style', 'mintstyle']:
         data_rep = 'hml_vec'
         njoints = 263
         nfeats = 1

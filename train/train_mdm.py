@@ -41,7 +41,7 @@ def main():
     
     if args.lora_finetune:
         print("creating style data loader...")
-        data = get_dataset_loader(name=args.dataset, batch_size=args.batch_size, num_frames=args.num_frames, styles=tuple(args.styles))
+        data = get_dataset_loader(name=args.dataset, batch_size=args.batch_size, num_frames=args.num_frames, styles=tuple(args.styles), split_file=args.split_file)
         print("creating prior data loader...", flush=True)
         prior_data = get_prior_dataset_loader(batch_size=args.batch_size, num_frames=args.num_frames)
     else:

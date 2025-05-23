@@ -66,6 +66,7 @@ def add_lora_options(parser):
     group.add_argument("--lora_layer", default=-100, type=int, help='Transformers layer to use for lora, negative for all layers.')
     group.add_argument("--no_lora_q", action='store_true', help='remove lora adapter from query')
     group.add_argument("--lora_ff", action='store_true', help='add lora adapter to feed forward layers')
+    group.add_argument("--split_file", default=None, type=str, help='Path to the split file to use for training. If None, will use the default split file.')
 
 def add_base_options(parser):
     group = parser.add_argument_group('base')
@@ -121,7 +122,7 @@ def add_model_options(parser):
 
 def add_data_options(parser):
     group = parser.add_argument_group('dataset')
-    group.add_argument("--dataset", default='humanml', choices=['humanml', 'kit', 'humanact12', 'uestc', '100style'], type=str,
+    group.add_argument("--dataset", default='humanml', choices=['humanml', 'kit', 'humanact12', 'uestc', '100style', 'mintstyle'], type=str,
                        help="Dataset name (choose from list).")
     group.add_argument("--data_dir", default="", type=str,
                        help="If empty, will use defaults according to the specified dataset.")
@@ -259,7 +260,7 @@ def add_evaluation_options(parser):
 def get_cond_mode(args):
     if args.unconstrained:
         cond_mode = 'no_cond'
-    elif args.dataset in ['kit', 'humanml', '100style']:
+    elif args.dataset in ['kit', 'humanml', '100style', 'mintstyle']:
         cond_mode = 'text'
     else:
         cond_mode = 'action'

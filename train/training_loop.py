@@ -200,12 +200,11 @@ class TrainLoop:
                 group['weight_decay'] = tgt_wd
 
     def run_loop(self):
-        print('train steps:', self.num_steps)
+        print('[#] Train steps:', self.num_steps)
         for epoch in range(self.num_epochs):
 
             if self.args.lora_finetune:
-                print(f'Starting epoch {epoch}')
-                for (motion, cond), (prior_motion, prior_cond) in tqdm(zip(self.data, self.prior_data)):
+                for (motion, cond), (prior_motion, prior_cond) in tqdm(zip(self.data, self.prior_data), desc=f'Starting epoch {epoch}', leave=True):
                     if not (not self.lr_anneal_steps or self.total_step() < self.lr_anneal_steps):
                         break
                     
