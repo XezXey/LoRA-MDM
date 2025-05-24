@@ -100,7 +100,8 @@ class StyleMotionDataset(Dataset):
                 break
             
             label_data, motion_style, motion_type, cut_idx = motion_to_label[name]
-            if motion_style not in  styles:
+            print(name, label_data, motion_style, motion_type, cut_idx)
+            if motion_style not in styles:
                 continue
             if motion_type.startswith("TR"):
                 continue

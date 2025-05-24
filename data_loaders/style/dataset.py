@@ -32,7 +32,7 @@ def build_dict_from_txt(filename):
  
 class StyleMotionDataset(Dataset):
 
-    def __init__(self, styles, mode, motion_type_to_exclude=[]):
+    def __init__(self, styles, mode, motion_type_to_exclude=[], split_file=None):
         assert styles is not None
         
         data_dict = {}
@@ -50,7 +50,7 @@ class StyleMotionDataset(Dataset):
         
         # path = "./dataset/100STYLE-SMPL/"
         path = "/data/mint/Motion_Dataset/RETARGETED_100STYLE/100STYLE-SMPL/"
-        split_file = path + "train_100STYLE_Full.txt" 
+        # split_file = path + "train_100STYLE_Full.txt" 
                 
         self.movments = {
             "BR":	"running backwards",

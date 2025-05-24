@@ -316,7 +316,8 @@ def load_dataset(args, max_frames, n_frames, styles=None):
                               num_frames=max_frames,
                               split='test',
                               hml_mode='text_only',
-                              styles=tuple(styles))
+                              styles=tuple(styles),
+                              split_file=args.split_file,)
     data.fixed_length = n_frames
     return data
 

@@ -133,7 +133,7 @@ def load_lora_to_model(model, lora_path, use_avg: bool=False):  # use_avg_model
     
 def find_lora_path(style, base_path='save/lora'):
     for dir in os.listdir(base_path):
-        model_path = os.path.join(base_path, dir, 'model000004000.pt')
+        model_path = os.path.join(base_path, dir, 'model000004001.pt')
         if style in dir and os.path.exists(model_path):
             return model_path
     raise Exception(f'lora for style {style} not found at {base_path}')

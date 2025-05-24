@@ -45,7 +45,7 @@ def get_dataset(name, num_frames, split='train', hml_mode='train', styles=None, 
     if name in ["humanml", "kit"]:
         dataset = DATA(split=split, num_frames=num_frames, mode=hml_mode)
     elif name == "100style":
-        dataset = DATA(styles, split, motion_type_to_exclude=motion_type_to_exclude)
+        dataset = DATA(styles, split, motion_type_to_exclude=motion_type_to_exclude, split_file=split_file)
     elif name == "mintstyle":
         dataset = DATA(styles, split, motion_type_to_exclude=motion_type_to_exclude, split_file=split_file)
         
