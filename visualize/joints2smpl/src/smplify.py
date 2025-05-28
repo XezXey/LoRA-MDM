@@ -231,6 +231,7 @@ class SMPLify3D():
                                                 use_collision=self.use_collision, 
                                                 model_vertices=model_vertices, model_faces=self.model_faces,
                                                 search_tree=search_tree, pen_distance=pen_distance, filter_faces=filter_faces)
+                    print(loss)
                     loss.backward()
                     return loss
 

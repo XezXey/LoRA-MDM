@@ -267,6 +267,8 @@ def main(args=None):
 
 def save_multiple_samples(out_path, file_templates,  animations, fps, max_frames):
     
+    # print(out_path, file_templates, animations.shape, fps, max_frames)
+    # exit()
     num_samples_in_out_file = 3
     n_samples = animations.shape[0]
     
