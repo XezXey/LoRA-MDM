@@ -222,6 +222,8 @@ def add_generate_options(parser):
                        help="A text prompt to be generated. If empty, will take text prompts from dataset.")
     group.add_argument("--action_name", default='', type=str,
                        help="An action name to be generated. If empty, will take text prompts from dataset.")
+    group.add_argument("--save_to_visualizer", default=None, type=str,
+                       help="If specified, will save the results to the visualizer in the specified path.")
 
 
 def add_edit_options(parser):

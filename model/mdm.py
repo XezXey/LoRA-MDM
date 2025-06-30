@@ -142,7 +142,7 @@ class MDM(nn.Module):
             
     def add_LoRA_adapters(self):
         assert self.lora_fintune
-        print("LoRAing MDM")
+        print("[#] LoRAing MDM!!!")
         for n, p in self.named_parameters():
             if 'lora' not in n:
                 p.requires_grad = False

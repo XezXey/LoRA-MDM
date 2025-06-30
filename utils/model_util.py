@@ -123,7 +123,10 @@ def load_saved_model(model, model_path, use_avg: bool=False):  # use_avg_model
 def load_lora_to_model(model, lora_path, use_avg: bool=False):  # use_avg_model
     if '.pt' not in lora_path:
         lora_path = find_lora_path(lora_path)
-        
+    
+    print("#"*100)
+    print("[#] Using LoRA model from: ", lora_path)
+    print("#"*100)
     state_dict = torch.load(lora_path, map_location='cpu')
     # Use average model when possible
 
@@ -133,7 +136,7 @@ def load_lora_to_model(model, lora_path, use_avg: bool=False):  # use_avg_model
     
 def find_lora_path(style, base_path='save/lora'):
     for dir in os.listdir(base_path):
-        model_path = os.path.join(base_path, dir, 'model000048000.pt')
+        model_path = os.path.join(base_path, dir, 'model000004001.pt')
         if style in dir and os.path.exists(model_path):
             return model_path
     raise Exception(f'lora for style {style} not found at {base_path}')

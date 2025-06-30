@@ -12,6 +12,7 @@ import numpy as np
 import torch
 from utils.parser_util import generate_args
 from utils.model_util import create_model_and_diffusion, load_saved_model, load_lora_to_model
+from utils import mint
 from utils import dist_util
 from model.cfg_sampler import ClassifierFreeSampleModel
 from data_loaders.get_data import get_dataset_loader
@@ -223,6 +224,16 @@ def main(args=None):
         fw.write('\n'.join(all_text))
     with open(npy_path.replace('.npy', '_len.txt'), 'w') as fw:
         fw.write('\n'.join([str(l) for l in all_lengths]))
+    
+    if (args.save_to_visualizer is not None) and args.lora_finetune:
+        lora_base = os.path.basename(args.lora_path).replace('.pt', '')
+        mdm_base = os.path.basename(args.model_path).replace('.pt', '')
+        motion_base = os.path.basename(os.path.dirname(args.lora_path))
+        out_name = f'{motion_base}_LoRA={lora_base}_MDM={mdm_base}.json'
+        print(f"[#] saving results to visualizer [{out_path}]")
+        mint.save_to_visualizer(data_dict={'motion': all_motions, 'rics':all_rics, 'text': all_text, 'lengths': all_lengths,
+                                           'num_samples': args.num_samples, 'num_repetitions': args.num_repetitions}, 
+                                save_dir=args.save_to_visualizer, out_name=out_name)
 
     print(f"saving visualizations to [{out_path}]...")
     skeleton = paramUtil.kit_kinematic_chain if args.dataset == 'kit' else paramUtil.t2m_kinematic_chain
