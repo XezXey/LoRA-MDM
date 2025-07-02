@@ -81,9 +81,14 @@ class InpaintingDataLoader(object):
     def __init__(self, data, inpainting_mask):
         self.data = data
         self.inpainting_mask = inpainting_mask
+        print("GGGGG")
+        print(self.data.shape, self.inpainting_mask.shape)
     
     def __iter__(self):
         for motion, cond in super().__getattribute__('data').__iter__():
+            print(motion.shape, cond.keys(), cond['y'].keys())
+            print(self.inpainting_mask)
+            assert False
             cond['y']['inpainting_mask'] = torch.tensor(get_inpainting_mask(self.inpainting_mask, motion.shape)).to(motion.device)
             yield motion, cond
     
@@ -92,3 +97,4 @@ class InpaintingDataLoader(object):
     
     def __len__(self):
         return len(super().__getattribute__('data'))
+    

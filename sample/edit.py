@@ -18,6 +18,8 @@ import data_loaders.humanml.utils.paramUtil as paramUtil
 from data_loaders.humanml.utils.plot_script import plot_3d_motion
 from sample.generate import save_multiple_samples, construct_template_variables
 import shutil
+from utils import mint
+
 
 
 def main():
@@ -72,16 +74,16 @@ def main():
     # add inpainting mask according to args
     assert max_frames == input_motions.shape[-1]
     gt_frames_per_sample = {}
-    model_kwargs['y']['inpainted_motion'] = input_motions # B 263 1 frames
+    model_kwargs['y']['inpainted_motion'] = input_motions # B x 263 x 1 x frames
     
+    # True means use motion, False means the model should generate motion (inpainting)
     if args.edit_mode == 'in_between':
         model_kwargs['y']['inpainting_mask'] = torch.ones_like(input_motions, dtype=torch.bool,
                                                                device=input_motions.device)  # True means use gt motion
         for i, length in enumerate(model_kwargs['y']['lengths'].cpu().numpy()):
             start_idx, end_idx = int(args.prefix_end * length), int(args.suffix_start * length)
             gt_frames_per_sample[i] = list(range(0, start_idx)) + list(range(end_idx, max_frames))
-            model_kwargs['y']['inpainting_mask'][i, :, :,
-            start_idx: end_idx] = False  # do inpainting in those frames
+            model_kwargs['y']['inpainting_mask'][i, :, :, start_idx: end_idx] = False  # do inpainting in those frames
     elif args.edit_mode == 'upper_body':
         model_kwargs['y']['inpainting_mask'] = torch.tensor(humanml_utils.HML_LOWER_BODY_MASK, dtype=torch.bool,
                                                             device=input_motions.device)  # True is lower body data
@@ -92,6 +94,19 @@ def main():
                                                             device=input_motions.device)  # True is lower body data
         model_kwargs['y']['inpainting_mask'] = model_kwargs['y']['inpainting_mask'].unsqueeze(0).unsqueeze(
             -1).unsqueeze(-1).repeat(input_motions.shape[0], 1, input_motions.shape[2], input_motions.shape[3])
+        # Unsqueeze mask to 1 x 263 x 1 x 1, then repeat it to match the input shape
+        
+        # Defined trajectory for the model
+        tgt_pos_x = 0
+        tgt_pos_z = -3
+        pos_x = torch.linspace(0, tgt_pos_x, max_frames, device=dist_util.dev())
+        pos_z = torch.linspace(0, tgt_pos_z, max_frames, device=dist_util.dev())
+        pos_x = pos_x[None, None, None, ...]
+        pos_z = pos_z[None, None, None, ...]
+        model_kwargs['y']['inpainted_motion'] *= 0.0
+        model_kwargs['y']['inpainted_motion'][:, 1:2, :, :] = pos_x
+        model_kwargs['y']['inpainted_motion'][:, 2:3, :, :] = pos_z
+        model_kwargs['y']['lengths'] = (model_kwargs['y']['lengths'] * 0) + max_frames # convert to numpy array for consistency
 
     all_motions = []
     all_lengths = []
@@ -151,6 +166,15 @@ def main():
         fw.write('\n'.join(all_text))
     with open(npy_path.replace('.npy', '_len.txt'), 'w') as fw:
         fw.write('\n'.join([str(l) for l in all_lengths]))
+        
+    lora_base = os.path.basename(args.lora_path).replace('.pt', '') if args.lora_path else 'no'
+    mdm_base = os.path.basename(args.model_path).replace('.pt', '')
+    motion_base = os.path.basename(os.path.dirname(args.lora_path)) if args.lora_path else 'no'
+    text_base = args.text_condition.replace(' ', '-').replace('.', '') if args.text_condition else 'no'
+    out_name = f'{motion_base}_LoRA={lora_base}_MDM={mdm_base}_Text={text_base}.json'
+    mint.save_to_visualizer(data_dict={'motion': all_motions, 'text': all_text, 'lengths': all_lengths,
+                                'num_samples': args.num_samples, 'num_repetitions': args.num_repetitions}, 
+                    save_dir=args.save_to_visualizer, out_name=out_name)
 
     print(f"saving visualizations to [{out_path}]...")
     skeleton = paramUtil.kit_kinematic_chain if args.dataset == 'kit' else paramUtil.t2m_kinematic_chain

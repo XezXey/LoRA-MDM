@@ -50,8 +50,24 @@ def main():
         prior_data = None
         
     if args.inpainting_mask != None:
+        print("[#] Training with inpainting mask [{}]".format(args.inpainting_mask))
         # for editing application
-        data = InpaintingDataLoader(data, args.inpainting_mask)
+        class InpaintingDataLoader2(object):
+            def __init__(self, data):
+                self.data = data
+            
+            def __iter__(self):
+                for motion, cond in super().__getattribute__('data').__iter__():
+                    cond['y']['inpainting_mask'] = torch.tensor(get_inpainting_mask(args.inpainting_mask, motion.shape)).to(motion.device)
+                    yield motion, cond
+            
+            def __getattribute__(self, name):
+                return super().__getattribute__('data').__getattribute__(name)
+            
+            def __len__(self):
+                return len(super().__getattribute__('data'))
+
+        data = InpaintingDataLoader2(data)
     
     print("creating model and diffusion...")
     DiffusionClass = InpaintingGaussianDiffusion if args.inpainting_mask != None  else SpacedDiffusion

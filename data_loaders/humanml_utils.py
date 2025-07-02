@@ -59,7 +59,7 @@ HML_LOWER_BODY_MASK = np.concatenate(([True]*(1+2+1),
 HML_UPPER_BODY_MASK = ~HML_LOWER_BODY_MASK
 
 HML_TRAJ_MASK = np.zeros_like(HML_ROOT_MASK)
-HML_TRAJ_MASK[1:3] = True
+HML_TRAJ_MASK[1:3] = True   # root linear velocity and root height
 
 NUM_HML_FEATS = 263
 
@@ -96,6 +96,7 @@ def get_prefix_mask(shape, prefix_length=20):
     return expand_mask(prefix_mask, shape)
 
 def get_inpainting_mask(mask_name, shape, **kwargs):
+    # print(f"[#] Creating inpainting mask [{mask_name}] with shape {shape}")
     mask_names = mask_name.split(',')
     
     mask = np.zeros(shape)
