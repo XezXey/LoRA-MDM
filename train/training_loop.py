@@ -24,6 +24,7 @@ from eval import eval_humanml
 from sample.generate import main as generate
 from data_loaders.get_data import get_dataset_loader
 from utils.model_util import load_model_wo_clip
+from utils.mint import get_lora_mask
 
 
 # For ImageNet experiments, this was a good default value.
@@ -329,7 +330,7 @@ class TrainLoop:
                 # avg = alpha * avg + param * (1 - alpha)
                 avg_param.data.mul_(self.args.avg_model_beta).add_(
                     param.data, alpha=1 - self.args.avg_model_beta)
-
+                
     def forward_backward(self, batch, cond):
         self.mp_trainer.zero_grad()
         for i in range(0, batch.shape[0], self.microbatch):
@@ -340,6 +341,15 @@ class TrainLoop:
             micro_cond = cond
             last_batch = (i + self.microbatch) >= batch.shape[0]
             t, weights = self.schedule_sampler.sample(micro.shape[0], dist_util.dev())
+            
+            if self.args.lora_with_masking:
+                # NOTE: Can be rewritten to support arbitrary joint position and pose_rep
+                micro_cond['y']['lora_mask'] = get_lora_mask(
+                    x_start=micro,
+                    mask = micro_cond['y']['mask'],
+                    pose_rep=self.model.pose_rep, 
+                    mask_type='root_horizontal'
+                )
 
             compute_losses = functools.partial(
                 self.diffusion.training_losses,

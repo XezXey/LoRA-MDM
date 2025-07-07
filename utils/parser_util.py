@@ -67,6 +67,8 @@ def add_lora_options(parser):
     group.add_argument("--no_lora_q", action='store_true', help='remove lora adapter from query')
     group.add_argument("--lora_ff", action='store_true', help='add lora adapter to feed forward layers')
     group.add_argument("--split_file", default=None, type=str, help='Path to the split file to use for training. If None, will use the default split file.')
+    group.add_argument("--lora_with_masking", action='store_true', default=False,
+                       help="This use for training LoRA with masking on some parts of the joints in case we have only a few fine-tuning examples (e.g., motion paths)")
 
 def add_base_options(parser):
     group = parser.add_argument_group('base')
@@ -107,7 +109,7 @@ def add_model_options(parser):
     group.add_argument("--lambda_vel", default=0.0, type=float, help="Joint velocity loss.")
     group.add_argument("--lambda_fc", default=0.0, type=float, help="Foot contact loss.")
     group.add_argument("--lambda_prior_preserv", default=1.0, type=float, help="Prior preservation loss.")
-
+    
     group.add_argument("--unconstrained", action='store_true',
                        help="Model is trained unconditionally. That is, it is constrained by neither text nor action. "
                             "Currently tested on HumanAct12 only.")

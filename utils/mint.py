@@ -2,6 +2,7 @@ import numpy as np
 import torch as th
 import json
 import os
+import data_loaders.humanml_utils as hml_utils
 
 def rotation_6d_to_matrix(d6: th.Tensor) -> th.Tensor:
     """
@@ -31,6 +32,36 @@ def rotation_6d_to_matrix(d6: th.Tensor) -> th.Tensor:
     # Check determinant
     # assert th.allclose(th.det(R), th.ones(1, device=d6.device))
     return R
+
+def get_lora_mask(x_start, mask, pose_rep='rot6d', mask_type='root'):
+    """
+    Get LoRA mask for the given motion data and mask.
+    
+    Args:
+        x_start: Tensor of shape (B, J, D, T) representing the motion data.
+        mask: Tensor of shape (B, J, D, T) representing the mask.
+        pose_rep: String indicating the pose representation ('rot6d', 'xyz', etc.).
+            - 'rot6d': 6D rotation representation is (263, 1) joints with 6D rotations.
+            - 'xyz': 3D position representation is (22, 3) joints with 3D positions.
+        mask_type: String indicating the type of mask ('root', 'lower_body', 'upper_body').
+
+    Returns:
+        A tensor of shape (B, J, D, T) representing the LoRA mask.
+    """
+    B, J, D, T = x_start.shape
+    if pose_rep == 'rot6d':
+        if mask_type in ['root', 'root_horizontal']:
+            # Root joint in 6D is x_start[:, 1:3, :, :] (2nd and 3rd dimensions)
+            lora_mask = hml_utils.get_inpainting_mask(mask_name=mask_type, shape=x_start.shape)
+            lora_mask = 1 - lora_mask
+            lora_mask = th.tensor(lora_mask, dtype=x_start.dtype, device=x_start.device)  # Convert to tensor
+            lora_mask = th.logical_and(lora_mask, mask.bool())  # Applied time-dimensional mask
+        else: 
+            raise ValueError(f"[#] Only 'root' mask type is currently supported.")
+    else:
+        raise ValueError(f"[#] Only 'rot6d' pose representation is currently supported, got {pose_rep}.")
+
+    return lora_mask
 
 def save_to_visualizer(data_dict, save_dir, out_name):
     motions = data_dict["motion"]

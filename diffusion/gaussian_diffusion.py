@@ -205,7 +205,13 @@ class GaussianDiffusion:
         # assuming mask.shape == bs, 1, 1, seqlen
         loss = self.l2_loss(a, b)
         loss = sum_flat(loss * mask.float())  # gives \sigma_euclidean over unmasked elements
-        n_entries = a.shape[1] * a.shape[2]
+        
+        # n_entries = a.shape[1] * a.shape[2]
+        n_entries = 1
+        if mask.shape[1] == 1:
+            n_entries *= a.shape[1]  # number of joints
+        if mask.shape[2] == 1:
+            n_entries *= a.shape[2]
         non_zero_elements = sum_flat(mask) * n_entries
         # print('mask', mask.shape)
         # print('non_zero_elements', non_zero_elements)
@@ -1296,12 +1302,20 @@ class GaussianDiffusion:
             pass to the model. This can be used for conditioning.
         :param noise: if specified, the specific Gaussian noise to try to remove.
         :return: a dict with the key "loss" containing a tensor of shape [N].
-                 Some mean or variance settings may also have other keys.
+            Some mean or variance settings may also have other keys.
+        :model_kwargs: dict, optional
+            Additional keyword arguments to pass to the model.
+            'x_pr_start': the prior x_start motion for prior_preservation loss.
+            'x_pr_text': the prior text.
+            'x_pr_mask': the prior mask.
+            
         """
 
         # enc = model.model._modules['module']
         enc = model.model
         mask = model_kwargs['y']['mask']
+        lora_mask = model_kwargs['y'].get('lora_mask', None)
+        
         get_xyz = lambda sample: enc.rot2xyz(sample, mask=None, pose_rep=enc.pose_rep, translation=enc.translation,
                                              glob=enc.glob,
                                              # jointstype='vertices',  # 3.4 iter/sec # USED ALSO IN MotionCLIP
@@ -1316,41 +1330,8 @@ class GaussianDiffusion:
 
         terms = {}
 
-        if self.loss_type == LossType.KL or self.loss_type == LossType.RESCALED_KL:
-            terms["loss"] = self._vb_terms_bpd(
-                model=model,
-                x_start=x_start,
-                x_t=x_t,
-                t=t,
-                clip_denoised=False,
-                model_kwargs=model_kwargs,
-            )["output"]
-            if self.loss_type == LossType.RESCALED_KL:
-                terms["loss"] *= self.num_timesteps
-        elif self.loss_type == LossType.MSE or self.loss_type == LossType.RESCALED_MSE:
+        if self.loss_type == LossType.MSE or self.loss_type == LossType.RESCALED_MSE:
             model_output = model(x_t, self._scale_timesteps(t), **model_kwargs)
-
-            if self.model_var_type in [
-                ModelVarType.LEARNED,
-                ModelVarType.LEARNED_RANGE,
-            ]:
-                B, C = x_t.shape[:2]
-                assert model_output.shape == (B, C * 2, *x_t.shape[2:])
-                model_output, model_var_values = th.split(model_output, C, dim=1)
-                # Learn the variance using the variational bound, but don't let
-                # it affect our mean prediction.
-                frozen_out = th.cat([model_output.detach(), model_var_values], dim=1)
-                terms["vb"] = self._vb_terms_bpd(
-                    model=lambda *args, r=frozen_out: r,
-                    x_start=x_start,
-                    x_t=x_t,
-                    t=t,
-                    clip_denoised=False,
-                )["output"]
-                if self.loss_type == LossType.RESCALED_MSE:
-                    # Divide by 1000 for equivalence with initial implementation.
-                    # Without a factor of 1/1000, the VB term hurts the MSE term.
-                    terms["vb"] *= self.num_timesteps / 1000.0
 
             target = {
                 ModelMeanType.PREVIOUS_X: self.q_posterior_mean_variance(
@@ -1361,7 +1342,10 @@ class GaussianDiffusion:
             }[self.model_mean_type]
             assert model_output.shape == target.shape == x_start.shape  # [bs, njoints, nfeats, nframes]
 
-            terms["rot_mse"] = self.masked_l2(target, model_output, mask) # mean_flat(rot_mse)
+            if lora_mask is not None:
+                terms["rot_mse"] = self.masked_l2(target, model_output, lora_mask)  # mean_flat(rot_mse)
+            else:
+                terms["rot_mse"] = self.masked_l2(target, model_output, mask) # mean_flat(rot_mse)
 
             target_xyz, model_output_xyz = None, None
 
@@ -1379,6 +1363,7 @@ class GaussianDiffusion:
                     terms["vel_xyz_mse"] = self.masked_l2(target_xyz_vel, model_output_xyz_vel, mask[:, :, :, 1:])
 
             if self.lambda_fc > 0.:
+                # Foot contact loss
                 torch.autograd.set_detect_anomaly(True)
                 if self.data_rep == 'rot6d' and dataset.dataname in ['humanact12', 'uestc']:
                     target_xyz = get_xyz(target) if target_xyz is None else target_xyz
