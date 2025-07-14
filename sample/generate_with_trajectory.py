@@ -160,7 +160,6 @@ def main(args=None):
         pass
         
 
-
     for rep_i in range(args.num_repetitions):
         print(f'### Sampling [repetitions #{rep_i}]')
         
@@ -250,8 +249,8 @@ def main(args=None):
     with open(npy_path.replace('.npy', '_len.txt'), 'w') as fw:
         fw.write('\n'.join([str(l) for l in all_lengths]))
     
-    if (args.save_to_visualizer is not None) and args.lora_finetune:
-        lora_base = os.path.basename(args.lora_path).replace('.pt', '')
+    if (args.save_to_visualizer is not None):
+        lora_base = os.path.basename(args.lora_path).replace('.pt', '') if args.lora_finetune else 'No'
         mdm_base = os.path.basename(args.model_path).replace('.pt', '')
         motion_base = os.path.basename(os.path.dirname(args.lora_path))
         out_name = f'{motion_base}_LoRA={lora_base}_MDM={mdm_base}_Suffix={args.save_suffix}.json'
@@ -259,6 +258,7 @@ def main(args=None):
         mint.save_to_visualizer(data_dict={'motion': all_motions, 'rics':all_rics, 'text': all_text, 'lengths': all_lengths,
                                            'num_samples': args.num_samples, 'num_repetitions': args.num_repetitions}, 
                                 save_dir=args.save_to_visualizer, out_name=out_name)
+        exit()
 
     print(f"saving visualizations to [{out_path}]...")
     skeleton = paramUtil.kit_kinematic_chain if args.dataset == 'kit' else paramUtil.t2m_kinematic_chain

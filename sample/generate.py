@@ -140,10 +140,30 @@ def main(args=None):
         print(f'### Sampling [repetitions #{rep_i}]')
         
         if args.inpainting_mask != None:
-            # for trajectory conditioning
-            inpainted_motion = next(inpaint_data)[0][...,:n_frames].to(dist_util.dev())
-            model_kwargs['y']['inpainted_motion'] = inpainted_motion
-            model_kwargs['y']['inpainting_mask'] = torch.tensor(get_inpainting_mask(args.inpainting_mask, inpainted_motion.shape)).float().to(dist_util.dev())
+            print("[#] Using inpainting mask for sampling with trajectory")
+            if args.hardcoded_motion_traj:
+                print("[#] Using hardcoded motion trajectory for inpainting")
+                inpainted_motion = next(inpaint_data)[0][...,:n_frames].to(dist_util.dev())
+                motion_template = torch.zeros_like(inpainted_motion, device=dist_util.dev())  # hard-coded motion is not supported for inpainting
+                # Defined trajectory for the model
+                tgt_pos_x = -0.5 # +x is left
+                tgt_pos_z = 0.5  # +z is forward                    
+                # pos_x = torch.linspace(0, tgt_pos_x, n_frames, device=dist_util.dev())
+                # pos_z = torch.linspace(0, tgt_pos_z, n_frames, device=dist_util.dev())
+                pos_x = torch.ones(n_frames, device=dist_util.dev()) * tgt_pos_x
+                pos_z = torch.ones(n_frames, device=dist_util.dev()) * tgt_pos_z
+                pos_x = pos_x[None, None, None, ...]
+                pos_z = pos_z[None, None, None, ...]
+                model_kwargs['y']['inpainted_motion'] = motion_template.clone()
+                model_kwargs['y']['inpainted_motion'][:, 1:2, :, :] = pos_x
+                model_kwargs['y']['inpainted_motion'][:, 2:3, :, :] = pos_z
+                model_kwargs['y']['inpainting_mask'] = torch.tensor(get_inpainting_mask(args.inpainting_mask, inpainted_motion.shape)).float().to(dist_util.dev())
+            else:
+                print("[#] Using inpainting mask from the dataset for sampling with trajectory")
+                # for trajectory conditioning
+                inpainted_motion = next(inpaint_data)[0][...,:n_frames].to(dist_util.dev())
+                model_kwargs['y']['inpainted_motion'] = inpainted_motion
+                model_kwargs['y']['inpainting_mask'] = torch.tensor(get_inpainting_mask(args.inpainting_mask, inpainted_motion.shape)).float().to(dist_util.dev())
             
         # add CFG scale to batch
         if args.guidance_param != 1:
@@ -225,11 +245,11 @@ def main(args=None):
     with open(npy_path.replace('.npy', '_len.txt'), 'w') as fw:
         fw.write('\n'.join([str(l) for l in all_lengths]))
     
-    if (args.save_to_visualizer is not None) and args.lora_finetune:
-        lora_base = os.path.basename(args.lora_path).replace('.pt', '')
+    if (args.save_to_visualizer is not None):
+        lora_base = os.path.basename(args.lora_path).replace('.pt', '') if args.lora_finetune else 'No'
         mdm_base = os.path.basename(args.model_path).replace('.pt', '')
         motion_base = os.path.basename(os.path.dirname(args.lora_path))
-        out_name = f'{motion_base}_LoRA={lora_base}_MDM={mdm_base}.json'
+        out_name = f'{motion_base}_LoRA={lora_base}_MDM={mdm_base}_Suffix={args.save_suffix}.json'
         print(f"[#] saving results to visualizer [{out_path}]")
         mint.save_to_visualizer(data_dict={'motion': all_motions, 'rics':all_rics, 'text': all_text, 'lengths': all_lengths,
                                            'num_samples': args.num_samples, 'num_repetitions': args.num_repetitions}, 

@@ -348,7 +348,7 @@ class TrainLoop:
                     x_start=micro,
                     mask = micro_cond['y']['mask'],
                     pose_rep=self.model.pose_rep, 
-                    mask_type='root_horizontal'
+                    mask_type=(self.args.lora_with_masking).lower()
                 )
 
             compute_losses = functools.partial(

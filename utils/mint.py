@@ -2,7 +2,6 @@ import numpy as np
 import torch as th
 import json
 import os
-import data_loaders.humanml_utils as hml_utils
 
 def rotation_6d_to_matrix(d6: th.Tensor) -> th.Tensor:
     """
@@ -34,6 +33,8 @@ def rotation_6d_to_matrix(d6: th.Tensor) -> th.Tensor:
     return R
 
 def get_lora_mask(x_start, mask, pose_rep='rot6d', mask_type='root'):
+    
+    import data_loaders.humanml_utils as hml_utils
     """
     Get LoRA mask for the given motion data and mask.
     
@@ -49,15 +50,16 @@ def get_lora_mask(x_start, mask, pose_rep='rot6d', mask_type='root'):
         A tensor of shape (B, J, D, T) representing the LoRA mask.
     """
     B, J, D, T = x_start.shape
+    valid_mask_types = ['root', 'root_horizontal', 'root_traj']
     if pose_rep == 'rot6d':
-        if mask_type in ['root', 'root_horizontal']:
+        if mask_type in valid_mask_types:
             # Root joint in 6D is x_start[:, 1:3, :, :] (2nd and 3rd dimensions)
             lora_mask = hml_utils.get_inpainting_mask(mask_name=mask_type, shape=x_start.shape)
             lora_mask = 1 - lora_mask
             lora_mask = th.tensor(lora_mask, dtype=x_start.dtype, device=x_start.device)  # Convert to tensor
             lora_mask = th.logical_and(lora_mask, mask.bool())  # Applied time-dimensional mask
         else: 
-            raise ValueError(f"[#] Only 'root' mask type is currently supported.")
+            raise ValueError(f"[#] Only {valid_mask_types} mask type is currently supported.")
     else:
         raise ValueError(f"[#] Only 'rot6d' pose representation is currently supported, got {pose_rep}.")
 
@@ -88,6 +90,38 @@ def save_to_visualizer(data_dict, save_dir, out_name):
         'prompts': texts, # B
         }
         
+    os.makedirs(save_dir, exist_ok=True)
+    
+    with open(f"{save_dir}/{out_name}", "w") as f:
+        json.dump(out, f)
+    print(f"[#] saved to visualizer: {save_dir}/{out_name}")
+    
+
+def training_motion_to_visualizer(data_dict, save_dir, out_name):
+    """
+    Convert training data dictionary to visualizer format and save it.
+    
+    Args:
+        data_dict: Dictionary containing motion data and other information.
+        save_dir: Directory where the output will be saved.
+        out_name: Name of the output file.
+    """
+    if 'motions' not in data_dict:
+        raise ValueError("data_dict must contain 'motions' key.")
+    
+    motions = data_dict['motions']
+    if len(motions.shape) == 3:
+        motions = motions[None, ...]    # B x T x J x 3
+    print(f"[#] motion shape: {motions.shape}")
+    assert motions.shape[2] == 22, "Motion data must have 22 joints."
+    assert motions.shape[3] == 3, "Motion data must have 3 dimensions (x, y, z)."
+    
+    B, T, J, D = motions.shape  # B x T x 22 x 3
+    
+    motions = motions.transpose(0, 2, 3, 1)  # B x J x D x T
+    out = {
+        'motions': motions.astype(np.float64).tolist(),  # B x 22 x 3 x T
+    }
     os.makedirs(save_dir, exist_ok=True)
     
     with open(f"{save_dir}/{out_name}", "w") as f:

@@ -58,6 +58,7 @@ HML_LOWER_BODY_MASK = np.concatenate(([True]*(1+2+1),
                                      [True]*4))
 HML_UPPER_BODY_MASK = ~HML_LOWER_BODY_MASK
 
+# Motion path
 HML_TRAJ_MASK = np.zeros_like(HML_ROOT_MASK)
 HML_TRAJ_MASK[1:3] = True   # root linear velocity and root height
 
@@ -103,11 +104,14 @@ def get_inpainting_mask(mask_name, shape, **kwargs):
     if 'in_between' in mask_names:
         mask = np.maximum(mask, get_in_between_mask(shape, **kwargs))
     
-    if 'root' in mask_names:
-        mask = np.maximum(mask, expand_mask(HML_ROOT_MASK, shape))
-    
     if 'root_horizontal' in mask_names:
         mask = np.maximum(mask, expand_mask(HML_ROOT_HORIZONTAL_MASK, shape))
+    
+    elif 'root_traj' in mask_names:
+        mask = np.maximum(mask, expand_mask(HML_TRAJ_MASK, shape))
+    
+    elif 'root' in mask_names:
+        mask = np.maximum(mask, expand_mask(HML_ROOT_MASK, shape))
 
     if 'prefix' in mask_names:
         mask = np.maximum(mask, get_prefix_mask(shape, **kwargs))

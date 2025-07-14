@@ -67,7 +67,7 @@ def add_lora_options(parser):
     group.add_argument("--no_lora_q", action='store_true', help='remove lora adapter from query')
     group.add_argument("--lora_ff", action='store_true', help='add lora adapter to feed forward layers')
     group.add_argument("--split_file", default=None, type=str, help='Path to the split file to use for training. If None, will use the default split file.')
-    group.add_argument("--lora_with_masking", action='store_true', default=False,
+    group.add_argument("--lora_with_masking", default=None, type=str,
                        help="This use for training LoRA with masking on some parts of the joints in case we have only a few fine-tuning examples (e.g., motion paths)")
 
 def add_base_options(parser):
@@ -226,9 +226,11 @@ def add_generate_options(parser):
                        help="An action name to be generated. If empty, will take text prompts from dataset.")
     group.add_argument("--save_to_visualizer", default=None, type=str,
                        help="If specified, will save the results to the visualizer in the specified path.")
-    group.add_argument("--save_suffix", default='', type=str,
+    group.add_argument("--save_suffix", default='No', type=str,
                        help="If specified, will add this suffix to the output file names. "
                             "If empty, will use the model name as a suffix.")
+    group.add_argument("--hardcoded_motion_traj", default=False, action='store_true',
+                       help="If True, will use hardcoded motion trajectory for the trajectory editing.")
 
 
 def add_edit_options(parser):
